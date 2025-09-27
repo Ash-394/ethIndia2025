@@ -1,3 +1,0 @@
-export const EvidenceLedgerABI = [
-    // ... the ABI entries for the functions we need ...
-  ] as const;

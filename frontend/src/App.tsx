@@ -6,6 +6,7 @@ import PolicePortal from "./pages/PolicePortal";
 import SubmitEvidence from "./pages/SubmitEvidence";
 import InvestigatorAI from "./pages/InvestigatorAI";
 import Navbar from "./components/Navbar";
+import {WalletProvider} from "./context/WalletContext.tsx"
 
 // 1. Import the background image
 // Adjust the path as needed, assuming App.tsx is in `src` and image is in `src/assets/images`
@@ -37,21 +38,21 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
+      <WalletProvider>
       <Router>
-        {/* 2. Apply background styles to the main Box */}
         <Box
           sx={{
             minHeight: "100vh",
-            // Fallback background color if image fails to load or for browsers that don't support image
             bgcolor: "background.default", 
             color: "text.primary",
-            backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url(${backgroundPattern})`, // Add a dark overlay with linear-gradient
-            backgroundSize: "cover", // Cover the entire Box
-            backgroundPosition: "center", // Center the image
-            backgroundRepeat: "no-repeat", // Don't repeat the image
-            backgroundAttachment: "fixed", // Keeps the background fixed when scrolling
+            backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url(${backgroundPattern})`,
+            backgroundSize: "cover", 
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat", 
+            backgroundAttachment: "fixed", 
           }}
         >
+           
           <Navbar />
           <Routes>
             <Route path="/" element={<Landing />} />
@@ -62,6 +63,7 @@ function App() {
           </Routes>
         </Box>
       </Router>
+      </WalletProvider>
     </ThemeProvider>
   );
 }
