@@ -36,7 +36,8 @@ To ensure the integrity and persistence of evidence, our Collector Agent uses **
 #### On-chain Verification: Flow EVM Testnet
 The system is built on **Flow** and interacts with the blockchain to provide a transparent, on-chain record of investigative summaries.
 -   **Network:** Flow EVM Testnet
--   **Deployed Contract Address:** `[Your Deployed Contract Address on Flowscan]`
+-   **Deployed Contract Address:** `[0x4BdE24c005DE13a5d8B47CEb18D6485E17A444Fb]`
+    [On Flowscan:](https://evm-testnet.flowscan.io/tx/0x8c601859c86547d38bce138ac49bb47accd96bfe4c32d6b4d289795d0a1fda89?tab=index)
     -   *(Note: The contract was deployed in transaction `0x8c601859c86547d38bce138ac49bb47accd96bfe4c32d6b4d289795d0a1fda89`)*
 
 ## Technology Stack
