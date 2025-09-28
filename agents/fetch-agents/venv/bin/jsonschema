@@ -1,4 +1,4 @@
-#!/home/vivimelon/hackathon/hackathon/main/fetch-agents/venv/bin/python3.12
+#!/home/vivimelon/ethIndia2025/agents/fetch-agents/venv/bin/python3
 import sys
 from jsonschema.cli import main
 if __name__ == '__main__':

@@ -1,4 +1,4 @@
-#!/home/vivimelon/hackathon/hackathon/main/fetch-agents/venv/bin/python3.12
+#!/home/vivimelon/ethIndia2025/agents/fetch-agents/venv/bin/python3
 import sys
 from virtualenv.__main__ import run_with_catch
 if __name__ == '__main__':
