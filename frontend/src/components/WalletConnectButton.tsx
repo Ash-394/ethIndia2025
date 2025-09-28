@@ -1,17 +1,28 @@
-import { useState } from "react";
 import { Button } from "@mui/material";
+import { useWallet } from "../context/WalletContext";
+import WalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import DisconnectIcon from '@mui/icons-material/Logout';
 
 const WalletConnectButton = () => {
-  const [connected, setConnected] = useState(false);
+  const { account, isConnected, connectWallet, disconnectWallet } = useWallet();
+
+  const handleButtonClick = () => {
+    if (isConnected) {
+      disconnectWallet();
+    } else {
+      connectWallet();
+    }
+  };
 
   return (
     <Button
       variant="contained"
-      color="secondary"
-      onClick={() => setConnected(!connected)}
+      color={isConnected ? "success" : "secondary"}
+      onClick={handleButtonClick}
       sx={{ textTransform: "none" }}
+      startIcon={isConnected ? <DisconnectIcon /> : <WalletIcon />}
     >
-      {connected ? "Connected" : "Connect Wallet"}
+      {isConnected ? `Disconnect` : "Connect Wallet"}
     </Button>
   );
 };

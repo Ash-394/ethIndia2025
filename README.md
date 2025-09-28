@@ -1,4 +1,4 @@
-# ETHOS
+# ETHOSIntel
 
 **An advanced multi-agent system for cumulative intelligence analysis, built on the ASI Alliance stack and integrated with Flow and Filecoin for decentralized operation and verifiable evidence storage.**
 
@@ -8,7 +8,7 @@
 
 ## Project Summary
 
-ETHOS is a decentralized, multi-agent system designed to assist human analysts in complex investigations. It addresses the critical challenge of synthesizing a coherent narrative from a continuous stream of unstructured, text-based intelligence. The platform leverages a stateful, cumulative architecture, allowing its understanding of a case to grow more sophisticated with each new piece of evidence.
+ETHOSIntel is a decentralized, multi-agent system designed to assist human analysts in complex investigations. It addresses the critical challenge of synthesizing a coherent narrative from a continuous stream of unstructured, text-based intelligence. The platform leverages a stateful, cumulative architecture, allowing its understanding of a case to grow more sophisticated with each new piece of evidence.
 
 ## Core Innovation: Hybrid Reasoning
 
