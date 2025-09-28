@@ -334,15 +334,22 @@ const PolicePortal = () => {
                 </Grid>
               </Grid>
               {fetchedCase && (
-                <Box sx={{ mt: 2 }}>
-                  <Typography variant="subtitle1">Fetched Case Details:</Typography>
-                  <Typography>ID: {fetchedCase.caseId.toString()}</Typography>
-                  <Typography>Metadata Hash: {fetchedCase.metadataHash}</Typography>
-                  <Typography>Creator: {fetchedCase.creator}</Typography>
-                  <Typography>Created At: {new Date(fetchedCase.createdAt.toNumber() * 1000).toLocaleString()}</Typography>
-                  <Typography>Is Open: {fetchedCase.isOpen ? "Yes" : "No"}</Typography>
-                </Box>
-              )}
+  <Box sx={{ mt: 2 }}>
+    <Typography variant="subtitle1">Fetched Case Details:</Typography>
+    <Typography>ID: {fetchedCase.caseId.toString()}</Typography>
+    <Typography>Metadata Hash: {fetchedCase.metadataHash}</Typography>
+    <Typography>Creator: {fetchedCase.creator}</Typography>
+    <Typography>Created At: {new Date(fetchedCase.createdAt.toNumber() * 1000).toLocaleString()}</Typography>
+    <Typography>Is Open: {fetchedCase.isOpen ? "Yes" : "No"}</Typography>
+
+    {/* Show evidence file from CID only if authorized */}
+    <CaseEvidenceViewer
+      cid={fetchedCase.metadataHash}
+      authorized={isPoliceOfficer || account?.toLowerCase() === fetchedCase.creator.toLowerCase()}
+    />
+  </Box>
+)}
+
             </Paper>
 
             {/* Create Case */}

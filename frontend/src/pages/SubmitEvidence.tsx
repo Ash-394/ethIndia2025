@@ -1,27 +1,27 @@
 import { useState } from "react";
-import { Box, Button, Typography, TextField, Paper, CircularProgress, Alert, FormControl, InputLabel, Select, MenuItem, Divider } from "@mui/material";
-import { uploadFile, uploadText } from "../utils/storage";
+import { Box, Button, Typography, TextField, Paper, CircularProgress, Alert, FormControl, InputLabel, Select, MenuItem, Divider, Snackbar } from "@mui/material";
+import { useContract } from "../hooks/useContract";
 import { calculateSha256, calculateSha256OfText } from "../utils/crypto";
-import { useContract } from "../hooks/useContract"; // Import YOUR hook
+import { uploadFileEncrypted, uploadTextEncrypted } from "../utils/lighthouseUpload";
 
 const SubmitEvidence = () => {
-  // Use your useContract hook
   const { account, signer, contract, loading: web3Loading, error: web3Error, connectWallet } = useContract();
 
   const [caseId, setCaseId] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [textEvidence, setTextEvidence] = useState("");
-  const [submitterType, setSubmitterType] = useState(0); // 0 for anonymous, 1 for authenticated
-  const [encryptedKeyRef, setEncryptedKeyRef] = useState(""); // Placeholder for encryption reference
+  const [submitterType, setSubmitterType] = useState(0);
+  const [encryptedKeyRef, setEncryptedKeyRef] = useState("");
 
   const [uploading, setUploading] = useState(false);
   const [submittingContract, setSubmittingContract] = useState(false);
-  const [statusMessage, setStatusMessage] = useState({ message: "", type: "" }); // 'info', 'success', 'error'
+  const [statusMessage, setStatusMessage] = useState({ message: "", type: "" });
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       setFile(e.target.files[0]);
-      setTextEvidence(""); // Clear text if file is selected
+      setTextEvidence("");
     } else {
       setFile(null);
     }
@@ -29,74 +29,63 @@ const SubmitEvidence = () => {
 
   const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTextEvidence(e.target.value);
-    setFile(null); // Clear file if text is entered
+    setFile(null);
   };
 
   const handleSubmitEvidence = async () => {
-    if (!account || !signer || !contract) {
-      setStatusMessage({ message: "Please connect your wallet.", type: "error" });
-      return;
-    }
-    if (!caseId) {
-      setStatusMessage({ message: "Please enter a Case ID.", type: "error" });
-      return;
-    }
-    if (!file && !textEvidence) {
-      setStatusMessage({ message: "Please select a file or enter text evidence.", type: "error" });
-      return;
-    }
+    if (!account || !signer || !contract) return;
 
-    setUploading(true);
-    setSubmittingContract(false);
-    setStatusMessage({ message: "Uploading evidence to IPFS...", type: "info" });
-
-    let cid: string | null = null;
+    const apiKey = import.meta.env.VITE_LIGHTHOUSE_API_KEY!;
+    let cid: string = "";
     let sha256Hash: string = "";
 
     try {
+      setUploading(true);
+
       if (file) {
-        cid = await uploadFile(file);
+        cid = await uploadFileEncrypted(file, apiKey, signer, account, (progress) => console.log(`Upload: ${progress}%`));
         sha256Hash = await calculateSha256(file);
       } else if (textEvidence) {
-        cid = await uploadText(textEvidence); // Use new uploadText helper
+        cid = await uploadTextEncrypted(textEvidence, apiKey, signer, account, "evidence.txt");
         sha256Hash = await calculateSha256OfText(textEvidence);
-      } else {
-        throw new Error("No evidence selected.");
       }
-
-      if (!cid) throw new Error("Failed to get CID after upload.");
 
       setUploading(false);
       setSubmittingContract(true);
-      setStatusMessage({ message: "Evidence uploaded. Submitting to blockchain...", type: "info" });
 
-      // Call smart contract function
+      const safeSha256Hash = sha256Hash || "";
+      const safeCid = cid || "";
+      const safeEncryptedKeyRef = encryptedKeyRef?.trim() || "";
+      
       const tx = await contract.connect(signer).submitEvidenceToCase(
         parseInt(caseId),
-        sha256Hash,
-        cid, // cidPreview
+        safeSha256Hash,
+        safeCid,
         submitterType,
-        encryptedKeyRef // This would be the reference to encrypted key, if any
+        safeEncryptedKeyRef
       );
+      
 
-      setStatusMessage({ message: `Transaction sent: ${tx.hash}`, type: "info" });
-      await tx.wait();
-
+      setSubmittingContract(false);
       setStatusMessage({ message: `Evidence submitted successfully! CID: ${cid}`, type: "success" });
-      // Reset form
+      setSnackbarOpen(true); // Show toast notification
       setFile(null);
       setTextEvidence("");
-      setCaseId("");
       setEncryptedKeyRef("");
-
     } catch (err: any) {
-      console.error("Submission failed:", err);
-      setStatusMessage({ message: `Submission failed: ${err.reason || err.message || String(err)}`, type: "error" });
-    } finally {
+      console.error(err);
       setUploading(false);
       setSubmittingContract(false);
+      setStatusMessage({ message: `Submission failed: ${err.message || err}`, type: "error" });
+      setSnackbarOpen(true); // Show toast even on error
     }
   };
+
+  const handleCloseSnackbar = () => {
+    setSnackbarOpen(false);
+  };
+
+  // --- Render ---
 
   if (web3Loading) {
     return (
@@ -122,16 +111,12 @@ const SubmitEvidence = () => {
   if (!account) {
     return (
       <Box sx={{ p: 4 }}>
-        <Paper elevation={3} sx={{ p: 4, bgcolor: "background.paper", textAlign: 'center' }}>
-          <Typography variant="h5" gutterBottom>
-            Connect Wallet
-          </Typography>
+        <Paper elevation={3} sx={{ p: 4, textAlign: 'center' }}>
+          <Typography variant="h5" gutterBottom>Connect Wallet</Typography>
           <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
             Please connect your wallet to submit evidence.
           </Typography>
-          <Button onClick={connectWallet} variant="contained" color="primary">
-            Connect Wallet
-          </Button>
+          <Button onClick={connectWallet} variant="contained" color="primary">Connect Wallet</Button>
         </Paper>
       </Box>
     );
@@ -139,26 +124,12 @@ const SubmitEvidence = () => {
 
   return (
     <Box sx={{ p: 4 }}>
-      <Paper elevation={3} sx={{ p: 4, bgcolor: "background.paper" }}>
-        <Typography variant="h4" gutterBottom>
-          Submit Evidence
-        </Typography>
-
-        {statusMessage.message && (
-          <Alert severity={statusMessage.type} sx={{ mb: 3 }}>
-            {statusMessage.message}
-          </Alert>
-        )}
+      <Paper elevation={3} sx={{ p: 4 }}>
+        <Typography variant="h4" gutterBottom>Submit Evidence</Typography>
 
         <TextField
-          fullWidth
-          label="Case ID"
-          variant="outlined"
-          type="number"
-          value={caseId}
-          onChange={(e) => setCaseId(e.target.value)}
-          sx={{ mb: 3 }}
-          required
+          fullWidth label="Case ID" variant="outlined" type="number"
+          value={caseId} onChange={(e) => setCaseId(e.target.value)} sx={{ mb: 3 }} required
         />
 
         <FormControl fullWidth sx={{ mb: 3 }}>
@@ -177,18 +148,11 @@ const SubmitEvidence = () => {
 
         <Divider sx={{ my: 3 }}>Evidence Content</Divider>
 
-        {/* File Upload Section */}
-        <Box
-          sx={{
-            border: "2px dashed",
-            borderColor: "primary.main",
-            borderRadius: 2,
-            p: 4,
-            textAlign: "center",
-            mb: 3,
-            backgroundColor: file ? 'rgba(0, 229, 255, 0.1)' : 'transparent', // Highlight if file is chosen
-          }}
-        >
+        {/* File Upload */}
+        <Box sx={{
+          border: "2px dashed", borderColor: "primary.main", borderRadius: 2, p: 4,
+          textAlign: "center", mb: 3, backgroundColor: file ? 'rgba(0, 229, 255, 0.1)' : 'transparent',
+        }}>
           <Button variant="contained" component="label" sx={{ mb: 2 }}>
             Select File
             <input type="file" hidden onChange={handleFileChange} />
@@ -199,41 +163,38 @@ const SubmitEvidence = () => {
 
         <Divider sx={{ my: 3 }}>OR</Divider>
 
-        {/* Text Box Input */}
+        {/* Text Input */}
         <TextField
-          fullWidth
-          label="Enter Text Evidence"
-          variant="outlined"
-          multiline
-          rows={6}
-          value={textEvidence}
-          onChange={handleTextChange}
-          sx={{ mb: 3 }}
+          fullWidth label="Enter Text Evidence" variant="outlined" multiline rows={6}
+          value={textEvidence} onChange={handleTextChange} sx={{ mb: 3 }}
           placeholder="Type or paste your text evidence here. Selecting a file will clear this."
-          disabled={!!file} // Disable if a file is selected
+          disabled={!!file}
         />
 
-        {/* Placeholder for Encrypted Key Reference */}
         <TextField
-          fullWidth
-          label="Encrypted Key Reference (Optional)"
-          variant="outlined"
-          value={encryptedKeyRef}
-          onChange={(e) => setEncryptedKeyRef(e.target.value)}
+          fullWidth label="Encrypted Key Reference (Optional)" variant="outlined"
+          value={encryptedKeyRef} onChange={(e) => setEncryptedKeyRef(e.target.value)}
           sx={{ mb: 3 }}
           helperText="If your evidence is encrypted, store a reference to the decryption key here."
         />
 
+        {/* Submit Button */}
         <Button
-          fullWidth
-          variant="contained"
-          color="primary"
+          fullWidth variant="contained" color="primary"
           onClick={handleSubmitEvidence}
           disabled={!caseId || (!file && !textEvidence) || uploading || submittingContract || !contract || !signer}
           startIcon={(uploading || submittingContract) && <CircularProgress size={20} color="inherit" />}
         >
-          {uploading ? "Uploading to IPFS..." : submittingContract ? "Submitting to Blockchain..." : "Submit Evidence"}
+          {uploading ? "Uploading to Lighthouse..." : submittingContract ? "Submitting to Blockchain..." : "Submit Evidence"}
         </Button>
+
+        {/* Snackbar for success/error */}
+        <Snackbar
+          open={snackbarOpen}
+          autoHideDuration={5000}
+          onClose={handleCloseSnackbar}
+          message={statusMessage.message}
+        />
       </Paper>
     </Box>
   );

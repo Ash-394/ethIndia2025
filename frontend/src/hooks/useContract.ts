@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { ethers } from "ethers";
-import EvidenceRegistryAbi from "../utils/EvidenceRegistryAbi.json"; // Assuming this is correct
+import EvidenceRegistryAbi from "../utils/EvidenceRegistryAbi.json"; 
 
 // Use a prefix for React environment variables
 const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
@@ -77,7 +77,6 @@ export const useContract = () => {
 
   // Expose POLICE_ROLE constant for convenience
   const POLICE_ROLE = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("POLICE_ROLE"));
-  const DEFAULT_ADMIN_ROLE = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("0x0000000000000000000000000000000000000000000000000000000000000000"));
 
-  return { contract, provider, signer, account, loading, error, connectWallet, POLICE_ROLE, DEFAULT_ADMIN_ROLE };
+  return { contract, provider, signer, account, loading, error, connectWallet, POLICE_ROLE};
 };

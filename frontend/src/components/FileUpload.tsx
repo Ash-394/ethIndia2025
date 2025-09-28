@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Box, Button, Typography } from "@mui/material";
-import { uploadFile } from "../utils/storage"; // import helper
+import { uploadFileEncrypted } from "../utils/lighthouseUpload";
+
 
 const FileUpload = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -12,10 +13,13 @@ const FileUpload = () => {
   };
 
   const handleUpload = async () => {
-    if (!file) return;
+    if (!file || !signer || !account) return;  // need wallet signer and account
     setUploading(true);
     try {
-      const uploadedCid = await uploadFile(file);
+      const apiKey = process.env.REACT_APP_LIGHTHOUSE_API_KEY!;
+      const uploadedCid = await uploadFileEncrypted(file, apiKey, signer, account, (progress) => {
+        console.log(`Upload progress: ${progress}%`);
+      });
       setCid(uploadedCid);
     } catch (err) {
       console.error(err);
@@ -45,17 +49,14 @@ const FileUpload = () => {
           disabled={!file || uploading}
           onClick={handleUpload}
         >
-          {uploading ? "Uploading..." : "Upload to IPFS"}
+          {uploading ? "Uploading..." : "Upload to Lighthouse"}
         </Button>
       </Box>
       {cid && (
         <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-          Uploaded CID: {cid}
+          Uploaded CID: <a href={`https://gateway.lighthouse.storage/ipfs/${cid}`} target="_blank" rel="noreferrer">{cid}</a>
         </Typography>
       )}
-      <div> or text box (for mvp easier to parse for ai agent)
-
-      </div>
     </Box>
   );
 };
