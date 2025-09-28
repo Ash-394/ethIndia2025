@@ -7,14 +7,11 @@ class InformantTip(Model):
     text: str
     reply_to: Optional[str] = None
 
-class CaseFileUpdate(Model):
+class MeTTaScriptUpdate(Model):
     case_id: str
-    full_evidence_log: List[Dict[str, Any]]
+    cumulative_script: str
     reply_to: Optional[str] = None
 
 class InvestigationReport(Model):
     case_id: str
-    case_summary: str
-    key_entities: Dict[str, List[str]]
-    evidence_log: List[Dict[str, Any]]
-    ai_synthesis: str
+    insights: List[str]
